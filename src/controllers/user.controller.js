@@ -1,5 +1,7 @@
-export const findAllUsers = (req, res) => {
-  const name = 'joao';
+import prisma from '../prisma/client.js'
 
-  return res.json({ message: name });
+export const findAllUsers = async (req, res) => {
+  const users = await prisma.user.findMany();
+
+  return res.json(users);
 };
