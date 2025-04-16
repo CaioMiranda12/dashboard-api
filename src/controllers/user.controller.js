@@ -10,21 +10,23 @@ export const findAllUsers = async (req, res) => {
 export const findOneUser = async (req, res) => {
   const { id } = req.params;
 
-  if (!id) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ error: 'ID de usuário não encontrado' });
-  }
-
   try {
     const findUser = await prisma.user.findFirst({
       where: {
-        id,
+        id: Number(id),
       },
     });
 
+    if (!findUser) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ error: 'Usuário não encontrado' });
+    }
+
     return res.status(StatusCodes.OK).json(findUser);
   } catch (error) {
+    console.log(error);
+
     return res
       .status(StatusCodes.NOT_FOUND)
       .json({ error: 'Usuário não encontrado' });
