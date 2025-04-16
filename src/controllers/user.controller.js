@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import { validate as isUuid } from 'uuid';
 import prisma from '../prisma/client';
 
 export const findAllUsers = async (req, res) => {
@@ -10,10 +11,14 @@ export const findAllUsers = async (req, res) => {
 export const findOneUser = async (req, res) => {
   const { id } = req.params;
 
+  if (!isUuid(id)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ error: 'ID Inválido' });
+  }
+
   try {
     const findUser = await prisma.user.findFirst({
       where: {
-        id: Number(id),
+        id,
       },
     });
 
@@ -25,11 +30,9 @@ export const findOneUser = async (req, res) => {
 
     return res.status(StatusCodes.OK).json(findUser);
   } catch (error) {
-    console.log(error);
-
     return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ error: 'Usuário não encontrado' });
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: 'Erro ao buscar usuário' });
   }
 };
 
@@ -37,13 +40,13 @@ export const createUser = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    const userExits = await prisma.user.findFirst({
+    const userExists = await prisma.user.findFirst({
       where: {
         email,
       },
     });
 
-    if (userExits) {
+    if (userExists) {
       return res
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: 'E-mail já cadastrado' });
@@ -68,10 +71,14 @@ export const createUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
 
+  if (!isUuid(id)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ error: 'ID Inválido' });
+  }
+
   try {
     const user = await prisma.user.findFirst({
       where: {
-        id: Number(id),
+        id,
       },
     });
 
@@ -87,7 +94,9 @@ export const deleteUser = async (req, res) => {
       },
     });
 
-    return res.json({ message: 'Usuário deletado com sucesso!' });
+    return res
+      .status(StatusCodes.OK)
+      .json({ message: 'Usuário deletado com sucesso!' });
   } catch (error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
@@ -100,9 +109,13 @@ export const updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, email, password } = req.body;
 
+    if (!isUuid(id)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: 'ID Inválido' });
+    }
+
     const findUser = await prisma.user.findFirst({
       where: {
-        id: Number(id),
+        id,
       },
     });
 
