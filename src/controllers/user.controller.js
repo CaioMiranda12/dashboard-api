@@ -64,3 +64,70 @@ export const createUser = async (req, res) => {
       .json({ error: 'Falha ao criar usuário' });
   }
 };
+
+export const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+
+    if (!user) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ error: 'Usuário não encontrado' });
+    }
+
+    await prisma.user.delete({
+      where: {
+        id: Number(user.id),
+      },
+    });
+
+    return res.json({ message: 'Usuário deletado com sucesso!' });
+  } catch (error) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: 'Falha ao deletar usuário' });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password } = req.body;
+
+    const findUser = await prisma.user.findFirst({
+      where: {
+        id: Number(id),
+      },
+    });
+
+    if (!findUser) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ error: 'Usuário não encontrado' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: Number(findUser.id),
+      },
+      data: {
+        name,
+        email,
+        passwordHash: password,
+        updatedAt: new Date(),
+      },
+    });
+
+    return res.json(updatedUser);
+  } catch (error) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: 'Falha ao atualizar o usuário' });
+  }
+};
