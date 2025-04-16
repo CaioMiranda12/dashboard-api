@@ -1,5 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import { validate as isUuid } from 'uuid';
+import * as yup from 'yup';
 import prisma from '../prisma/client';
 
 export const findAllUsers = async (req, res) => {
@@ -37,9 +38,17 @@ export const findOneUser = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
+  const scheme = yup.object({
+    name: yup.string().required('O nome é obrigatório'),
+    email: yup.string().email().required(),
+    password: yup.string().min(6).required(),
+  });
+
   const { name, email, password } = req.body;
 
   try {
+    scheme.validateSync(req.body, { abortEarly: false });
+
     const userExists = await prisma.user.findFirst({
       where: {
         email,
@@ -60,11 +69,13 @@ export const createUser = async (req, res) => {
       },
     });
 
-    return res.status(StatusCodes.CREATED).json(user);
+    return res.status(StatusCodes.CREATED).json({
+      id: user.id,
+      name,
+      email,
+    });
   } catch (error) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ error: 'Falha ao criar usuário' });
+    return res.status(StatusCodes.BAD_REQUEST).json({ error: error.errors });
   }
 };
 
@@ -90,7 +101,7 @@ export const deleteUser = async (req, res) => {
 
     await prisma.user.delete({
       where: {
-        id: Number(user.id),
+        id: user.id,
       },
     });
 
@@ -127,7 +138,7 @@ export const updateUser = async (req, res) => {
 
     const updatedUser = await prisma.user.update({
       where: {
-        id: Number(findUser.id),
+        id: findUser.id,
       },
       data: {
         name,
