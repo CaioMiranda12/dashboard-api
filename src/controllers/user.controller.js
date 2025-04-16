@@ -126,7 +126,7 @@ export const updateUser = async (req, res) => {
 
     return res.json(updatedUser);
   } catch (error) {
-    res
+    return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ error: 'Falha ao atualizar o usuário' });
   }
