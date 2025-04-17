@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
 import { validate as isUuid } from 'uuid';
 import * as yup from 'yup';
+import bcrypt from 'bcrypt';
 import prisma from '../prisma/client';
 
 export const findAllUsers = async (req, res) => {
@@ -61,18 +62,20 @@ export const createUser = async (req, res) => {
         .json({ error: 'E-mail já cadastrado' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const user = await prisma.user.create({
       data: {
         name,
         email,
-        passwordHash: password,
+        passwordHash: hashedPassword,
       },
     });
 
     return res.status(StatusCodes.CREATED).json({
       id: user.id,
-      name,
-      email,
+      name: user.name,
+      email: user.email,
     });
   } catch (error) {
     return res.status(StatusCodes.BAD_REQUEST).json({ error: error.errors });
