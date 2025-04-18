@@ -28,7 +28,7 @@ model Transaction {
   type        TransactionType
   category    String
   title       String
-  description String?
+  description String
   amount      Float
   date        DateTime
   createdAt   DateTime        @default(now())
