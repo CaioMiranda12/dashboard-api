@@ -5,9 +5,22 @@ import bcrypt from 'bcrypt';
 import prisma from '../prisma/client';
 
 export const findAllUsers = async (req, res) => {
-  const users = await prisma.user.findMany();
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+      },
+    });
 
-  return res.status(StatusCodes.OK).json(users);
+    return res.status(StatusCodes.OK).json(users);
+  } catch (error) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: 'Erro ao buscar usuários' });
+  }
 };
 
 export const findOneUser = async (req, res) => {
@@ -21,6 +34,12 @@ export const findOneUser = async (req, res) => {
     const findUser = await prisma.user.findFirst({
       where: {
         id,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
       },
     });
 
@@ -119,7 +138,15 @@ export const deleteUser = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
+  const scheme = yup.object({
+    name: yup.string(),
+    email: yup.string().email(),
+    password: yup.string().min(6),
+  });
+
   try {
+    scheme.validateSync(req.body, { abortEarly: false });
+
     const { id } = req.params;
     const { name, email, password } = req.body;
 
@@ -139,6 +166,25 @@ export const updateUser = async (req, res) => {
         .json({ error: 'Usuário não encontrado' });
     }
 
+    if (email && email !== findUser.email) {
+      const emailExists = await prisma.user.findFirst({
+        where: {
+          email,
+        },
+      });
+
+      if (emailExists) {
+        return res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ error: 'E-mail já em uso' });
+      }
+    }
+
+    let hashedPassword;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
     const updatedUser = await prisma.user.update({
       where: {
         id: findUser.id,
@@ -146,7 +192,7 @@ export const updateUser = async (req, res) => {
       data: {
         name,
         email,
-        passwordHash: password,
+        passwordHash: password ? hashedPassword : findUser.passwordHash,
         updatedAt: new Date(),
       },
     });
@@ -155,6 +201,6 @@ export const updateUser = async (req, res) => {
   } catch (error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ error: 'Falha ao atualizar o usuário' });
+      .json({ error: error.errors || 'Falha ao atualizar o usuário' });
   }
 };
