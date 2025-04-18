@@ -3,6 +3,7 @@ import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
 import transactionRoutes from './routes/transaction.routes';
 import categoryRoutes from './routes/category.routes';
+import summaryRoutes from './routes/summary.routes';
 
 class App {
   constructor() {
@@ -20,6 +21,7 @@ class App {
     this.app.use('/auth', authRoutes);
     this.app.use('/transactions', transactionRoutes);
     this.app.use('/category', categoryRoutes);
+    this.app.use('/summary', summaryRoutes);
   }
 }
 
