@@ -21,12 +21,12 @@ model User {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   Transaction  Transaction[]
+  Category     Category[]
 }
 
 model Transaction {
   id          Int             @id @default(autoincrement())
   type        TransactionType
-  category    String
   title       String
   description String
   amount      Float
@@ -36,9 +36,24 @@ model Transaction {
 
   user   User   @relation(fields: [userId], references: [id])
   userId String
+
+  Category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId Int?
 }
 
 enum TransactionType {
   income
   expense
+}
+
+model Category {
+  id           Int           @id @default(autoincrement())
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@unique([name, userId])
 }
