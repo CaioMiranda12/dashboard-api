@@ -3,18 +3,44 @@ import * as yup from 'yup';
 import prisma from '../prisma/client';
 
 export const getUserTransactions = async (req, res) => {
-  const { userId } = req;
+  try {
+    const { userId } = req;
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      userId,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
-  return res.status(StatusCodes.OK).json(transactions);
+    return res.status(StatusCodes.OK).json(transactions);
+  } catch (error) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: 'Erro ao buscar transações' });
+  }
+};
+
+export const getOneTransaction = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+
+    const transaction = await prisma.transaction.findFirst({
+      where: {
+        id: Number(id),
+        userId,
+      },
+    });
+
+    return res.status(StatusCodes.OK).json(transaction);
+  } catch (error) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: 'Erro ao buscar transação' });
+  }
 };
 
 export const createTransaction = async (req, res) => {
@@ -46,7 +72,9 @@ export const createTransaction = async (req, res) => {
 
     return res.status(StatusCodes.CREATED).json(transaction);
   } catch (error) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ error: error.errors });
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: error.errors || 'Erro inesperado' });
   }
 };
 
@@ -70,7 +98,7 @@ export const deleteTransaction = async (req, res) => {
     if (transaction.userId !== userId) {
       return res
         .status(StatusCodes.UNAUTHORIZED)
-        .json({ error: 'Acesso negado para deletar essa transação' });
+        .json({ error: 'Acesso negado' });
     }
 
     await prisma.transaction.delete({
@@ -81,7 +109,7 @@ export const deleteTransaction = async (req, res) => {
 
     return res.json({ message: 'Transação excluída com sucesso' });
   } catch (error) {
-    return res.json('Falha ao deletar a transação');
+    return res.json({ error: 'Falha ao deletar a transação' });
   }
 };
 
@@ -107,7 +135,6 @@ export const updateTransaction = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { title, description, amount, category, type } = req.body;
     const { userId } = req;
 
     const transaction = await prisma.transaction.findFirst({
@@ -125,7 +152,7 @@ export const updateTransaction = async (req, res) => {
     if (transaction.userId !== userId) {
       return res
         .status(StatusCodes.UNAUTHORIZED)
-        .json({ error: 'Acesso negado para deletar essa transação' });
+        .json({ error: 'Acesso negado' });
     }
 
     const updatedTransaction = await prisma.transaction.update({
@@ -133,17 +160,13 @@ export const updateTransaction = async (req, res) => {
         id: transaction.id,
       },
       data: {
-        title,
-        description,
-        amount,
-        category,
-        type,
+        ...validatedData,
         updatedAt: new Date(),
       },
     });
 
     return res.json(updatedTransaction);
   } catch (error) {
-    return res.json({ error: error.errors });
+    return res.json({ error: error.errors || 'Erro inesperado' });
   }
 };
