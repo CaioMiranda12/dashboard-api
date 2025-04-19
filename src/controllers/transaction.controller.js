@@ -48,25 +48,39 @@ export const createTransaction = async (req, res) => {
     title: yup.string().required(),
     description: yup.string().min(6).required(),
     amount: yup.number().positive().required(),
-    category: yup.string().required(),
+    categoryId: yup.number().min(1).required(),
     type: yup.string().oneOf(['income', 'expense']).required(),
+    date: yup.date().optional(),
   });
 
   try {
     scheme.validateSync(req.body, { abortEarly: false });
 
-    const { title, description, amount, category, type } = req.body;
+    const { title, description, amount, categoryId, type, date } = req.body;
     const { userId } = req;
+
+    const categoryExists = await prisma.category.findFirst({
+      where: {
+        userId,
+        id: categoryId,
+      },
+    });
+
+    if (!categoryExists) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ error: 'Categoria não encontrada' });
+    }
 
     const transaction = await prisma.transaction.create({
       data: {
         title,
         description,
         amount,
-        category,
+        categoryId,
         type,
         userId,
-        date: new Date(),
+        date: date ? new Date(date) : new Date(),
       },
     });
 
@@ -118,8 +132,9 @@ export const updateTransaction = async (req, res) => {
     title: yup.string(),
     description: yup.string().min(6),
     amount: yup.number().positive(),
-    category: yup.string(),
+    categoryId: yup.number().min(1),
     type: yup.string().oneOf(['income', 'expense']),
+    date: yup.date(),
   });
 
   try {
@@ -153,6 +168,21 @@ export const updateTransaction = async (req, res) => {
       return res
         .status(StatusCodes.UNAUTHORIZED)
         .json({ error: 'Acesso negado' });
+    }
+
+    if (validatedData.categoryId) {
+      const categoryExists = await prisma.category.findFirst({
+        where: {
+          userId,
+          id: validatedData.categoryId,
+        },
+      });
+
+      if (!categoryExists) {
+        return res
+          .status(StatusCodes.NOT_FOUND)
+          .json({ error: 'Categoria não encontrada' });
+      }
     }
 
     const updatedTransaction = await prisma.transaction.update({
