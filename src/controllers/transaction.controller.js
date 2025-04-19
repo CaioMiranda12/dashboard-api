@@ -121,9 +121,13 @@ export const deleteTransaction = async (req, res) => {
       },
     });
 
-    return res.json({ message: 'Transação excluída com sucesso' });
+    return res
+      .status(StatusCodes.OK)
+      .json({ message: 'Transação excluída com sucesso' });
   } catch (error) {
-    return res.json({ error: 'Falha ao deletar a transação' });
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: 'Falha ao deletar a transação' });
   }
 };
 
@@ -195,8 +199,10 @@ export const updateTransaction = async (req, res) => {
       },
     });
 
-    return res.json(updatedTransaction);
+    return res.status(StatusCodes.OK).json(updatedTransaction);
   } catch (error) {
-    return res.json({ error: error.errors || 'Erro inesperado' });
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: error.errors || 'Erro inesperado' });
   }
 };
