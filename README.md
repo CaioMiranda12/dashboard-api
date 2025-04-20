@@ -41,4 +41,38 @@ npm run dev
 
 ## 📚 Rotas da API
 
-### 📦 Usuários
+```
+# 🔐 AUTH
+
+POST    /auth                  # Login (Retorna token JWT)
+
+# 🔐 USERS
+
+GET     /users                 # Busca por todos os usuários
+GET     /users/:id             # Buscar usuário por ID
+POST    /users                 # Criar novo usuário
+PATCH   /users/:id             # Atualizar usuário (requer token)
+DELETE  /users/:id             # Deletar usuário (requer token)
+
+# 💰 TRANSACTIONS
+
+GET     /transactions          # Listar todas as transações do usuário (requer token)
+POST    /transactions          # Criar nova transação (requer token)
+GET     /transactions/:id      # Buscar transação por ID (requer token)
+PATCH   /transactions/:id      # Atualizar transação (requer token)
+DELETE  /transactions/:id      # Deletar transação (requer token)
+
+# 🌟 CATEGORY
+
+GET     /category          # Listar todas as categorias do usuário (requer token)
+POST    /category          # Criar nova categoria (requer token)
+PATCH   /category/:id      # Atualizar categoria (requer token)
+DELETE  /category/:id      # Deletar categoria (requer token)
+
+# ℹ️ SUMMARY
+
+GET     /summary?month=X&year=Y           # Mostra o resumo das receitas, despesas e saldo do usuário por mês/ano (requer token)
+```
+
+
+
