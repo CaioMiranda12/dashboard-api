@@ -195,6 +195,12 @@ export const updateUser = async (req, res) => {
         passwordHash: password ? hashedPassword : findUser.passwordHash,
         updatedAt: new Date(),
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        updatedAt: true,
+      },
     });
 
     return res.json(updatedUser);
