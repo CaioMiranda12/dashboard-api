@@ -77,7 +77,7 @@ export const createUser = async (req, res) => {
 
     if (userExists) {
       return res
-        .status(StatusCodes.BAD_REQUEST)
+        .status(StatusCodes.CONFLICT)
         .json({ error: 'E-mail já cadastrado' });
     }
 

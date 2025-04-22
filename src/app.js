@@ -1,5 +1,6 @@
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
+import cors from 'cors';
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
 import transactionRoutes from './routes/transaction.routes';
@@ -10,6 +11,8 @@ import { swaggerSpec } from './configs/swagger';
 class App {
   constructor() {
     this.app = express();
+    this.app.use(cors());
+
     this.middlewares();
     this.routes();
   }
