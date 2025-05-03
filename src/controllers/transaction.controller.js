@@ -10,6 +10,14 @@ export const getUserTransactions = async (req, res) => {
       where: {
         userId,
       },
+      include: {
+        Category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
