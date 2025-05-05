@@ -43,7 +43,7 @@ export const createCategory = async (req, res) => {
 
     if (categoryExists) {
       return res
-        .status(StatusCodes.BAD_REQUEST)
+        .status(StatusCodes.CONFLICT)
         .json({ error: 'Já existe uma categoria com esse nome' });
     }
 
