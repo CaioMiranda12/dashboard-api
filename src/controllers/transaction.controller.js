@@ -90,6 +90,14 @@ export const createTransaction = async (req, res) => {
         userId,
         date: date ? new Date(date) : new Date(),
       },
+      include: {
+        Category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     return res.status(StatusCodes.CREATED).json(transaction);
