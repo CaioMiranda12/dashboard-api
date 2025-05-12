@@ -213,6 +213,14 @@ export const updateTransaction = async (req, res) => {
         ...validatedData,
         updatedAt: new Date(),
       },
+      include: {
+        Category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     return res.status(StatusCodes.OK).json(updatedTransaction);
