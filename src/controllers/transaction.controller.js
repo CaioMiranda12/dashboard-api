@@ -232,6 +232,7 @@ export const updateTransaction = async (req, res) => {
           select: {
             id: true,
             name: true,
+            color: true,
           },
         },
       },
