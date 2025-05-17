@@ -205,12 +205,15 @@ export const updateTransaction = async (req, res) => {
       }
     }
 
+    const inputDate = new Date(`${req.body.date}T00:00:00Z`);
+
     const updatedTransaction = await prisma.transaction.update({
       where: {
         id: transaction.id,
       },
       data: {
         ...validatedData,
+        date: inputDate,
         updatedAt: new Date(),
       },
       include: {
