@@ -15,6 +15,7 @@ export const getUserTransactions = async (req, res) => {
           select: {
             id: true,
             name: true,
+            color: true,
           },
         },
       },
@@ -40,6 +41,15 @@ export const getOneTransaction = async (req, res) => {
       where: {
         id: Number(id),
         userId,
+      },
+      include: {
+        Category: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+          },
+        },
       },
     });
 
@@ -95,6 +105,7 @@ export const createTransaction = async (req, res) => {
           select: {
             id: true,
             name: true,
+            color: true,
           },
         },
       },

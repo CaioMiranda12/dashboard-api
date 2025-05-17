@@ -26,11 +26,18 @@ export const getAllUserCategories = async (req, res) => {
 export const createCategory = async (req, res) => {
   const schema = yup.object({
     name: yup.string().required(),
+    color: yup
+      .string()
+      .required()
+      .matches(
+        /^#(?:[0-9a-fA-F]{3}){1,2}$/,
+        'Cor inválida. Use um valor hexadecimal, como #RRGGBB',
+      ),
   });
 
   try {
     const { userId } = req;
-    const { name } = req.body;
+    const { name, color } = req.body;
 
     schema.validateSync(req.body, { abortEarly: false });
 
@@ -50,6 +57,7 @@ export const createCategory = async (req, res) => {
     const category = await prisma.category.create({
       data: {
         name,
+        color,
         userId,
       },
     });
