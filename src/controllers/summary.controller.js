@@ -4,23 +4,27 @@ import prisma from '../prisma/client';
 export const getMonthlySummary = async (req, res) => {
   try {
     const { userId } = req;
-    const { month, year } = req.query;
+    const { startDate, endDate } = req.query;
 
-    const now = new Date();
-    const targetMonth = month ? month - 1 : now.getMonth();
-    const targetYear = year || now.getFullYear();
+    const dateFilter = {};
 
-    const firstDay = new Date(targetYear, targetMonth, 1);
-    const lastDay = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59);
+    if (startDate) {
+      dateFilter.gte = new Date(startDate);
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      dateFilter.lte = end;
+    }
+
+    const whereFilter = {
+      userId,
+      ...(startDate || endDate ? { date: dateFilter } : {}),
+    };
 
     const transactions = await prisma.transaction.findMany({
-      where: {
-        userId,
-        date: {
-          gte: firstDay,
-          lte: lastDay,
-        },
-      },
+      where: whereFilter,
     });
 
     const income = transactions
@@ -35,8 +39,9 @@ export const getMonthlySummary = async (req, res) => {
 
     return res.status(StatusCodes.OK).json({ income, expense, balance });
   } catch (error) {
+    console.error('Erro no resumo por data:', error);
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ error: 'Erro ao gerar o resumo mensal' });
+      .json({ error: 'Erro ao gerar o resumo por data' });
   }
 };
