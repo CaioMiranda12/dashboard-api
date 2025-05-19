@@ -224,7 +224,7 @@ export const updateTransaction = async (req, res) => {
       },
       data: {
         ...validatedData,
-        date: inputDate,
+        date: !inputDate ? transaction.date : transaction.date,
         updatedAt: new Date(),
       },
       include: {
@@ -240,6 +240,8 @@ export const updateTransaction = async (req, res) => {
 
     return res.status(StatusCodes.OK).json(updatedTransaction);
   } catch (error) {
+    console.log(error);
+
     return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ error: error.errors || 'Erro inesperado' });
