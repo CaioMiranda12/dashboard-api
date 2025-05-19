@@ -45,3 +45,57 @@ export const getMonthlySummary = async (req, res) => {
       .json({ error: 'Erro ao gerar o resumo por data' });
   }
 };
+
+export const getYearSummary = async (req, res) => {
+  try {
+    const { userId } = req;
+    const year = Number(req.query.year) || new Date().getFullYear();
+
+    const now = new Date(year, 0);
+
+    const firstDay = new Date(now.getFullYear(), 0, 1);
+
+    const lastDay = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        userId,
+        date: {
+          gte: firstDay,
+          lte: lastDay,
+        },
+      },
+    });
+
+    const summaryByMonth = transactions.reduce((acc, transaction) => {
+      const date = new Date(transaction.date);
+
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+      if (!acc[monthKey]) {
+        acc[monthKey] = {
+          income: 0,
+          expense: 0,
+          balance: 0,
+        };
+      }
+
+      if (transaction.type === 'income') {
+        acc[monthKey].income += transaction.amount;
+      } else if (transaction.type === 'expense') {
+        acc[monthKey].expense += transaction.amount;
+      }
+
+      acc[monthKey].balance = acc[monthKey].income - acc[monthKey].expense;
+
+      return acc;
+    }, {});
+
+    return res.json(summaryByMonth);
+  } catch (error) {
+    console.error('Erro no resumo por ano:', error);
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: 'Erro ao gerar o resumo por ano' });
+  }
+};
