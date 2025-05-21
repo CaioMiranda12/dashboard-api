@@ -20,7 +20,7 @@ export const getUserTransactions = async (req, res) => {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        date: 'desc',
       },
     });
 
