@@ -44,7 +44,10 @@ export const createCategory = async (req, res) => {
     const categoryExists = await prisma.category.findFirst({
       where: {
         userId,
-        name,
+        name: {
+          equals: name,
+          mode: 'insensitive',
+        },
       },
     });
 
