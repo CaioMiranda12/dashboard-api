@@ -110,11 +110,17 @@ export const deleteCategory = async (req, res) => {
 export const updateCategory = async (req, res) => {
   const scheme = yup.object({
     name: yup.string(),
+    color: yup
+      .string()
+      .matches(
+        /^#(?:[0-9a-fA-F]{3}){1,2}$/,
+        'Cor inválida. Use um valor hexadecimal, como #RRGGBB',
+      ),
   });
 
   try {
     const { userId } = req;
-    const { name } = req.body;
+    const { name, color } = req.body;
     const { id } = req.params;
 
     scheme.validateSync(req.body, { abortEarly: false });
@@ -151,6 +157,7 @@ export const updateCategory = async (req, res) => {
       },
       data: {
         name,
+        color,
         updatedAt: new Date(),
       },
     });
