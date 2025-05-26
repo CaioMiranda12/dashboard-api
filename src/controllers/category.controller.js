@@ -147,7 +147,7 @@ export const updateCategory = async (req, res) => {
 
     if (nameExists && category.name !== name) {
       return res
-        .status(StatusCodes.BAD_REQUEST)
+        .status(StatusCodes.CONFLICT)
         .json({ error: 'Já existe uma categoria com esse nome' });
     }
 
