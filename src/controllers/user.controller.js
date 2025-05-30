@@ -2,18 +2,11 @@ import { StatusCodes } from 'http-status-codes';
 import { validate as isUuid } from 'uuid';
 import * as yup from 'yup';
 import bcrypt from 'bcrypt';
-import prisma from '../prisma/client';
+import * as userModel from '../models/userModel';
 
 export const findAllUsers = async (req, res) => {
   try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-      },
-    });
+    const users = await userModel.findAllUsers();
 
     return res.status(StatusCodes.OK).json(users);
   } catch (error) {
@@ -31,17 +24,7 @@ export const findOneUser = async (req, res) => {
   }
 
   try {
-    const findUser = await prisma.user.findFirst({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-      },
-    });
+    const findUser = await userModel.findUserById(id);
 
     if (!findUser) {
       return res
@@ -69,11 +52,7 @@ export const createUser = async (req, res) => {
   try {
     scheme.validateSync(req.body, { abortEarly: false });
 
-    const userExists = await prisma.user.findFirst({
-      where: {
-        email,
-      },
-    });
+    const userExists = await userModel.findUserByEmail(email);
 
     if (userExists) {
       return res
@@ -83,13 +62,7 @@ export const createUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        passwordHash: hashedPassword,
-      },
-    });
+    const user = await userModel.createUser(name, email, hashedPassword);
 
     return res.status(StatusCodes.CREATED).json({
       id: user.id,
@@ -109,11 +82,7 @@ export const deleteUser = async (req, res) => {
   }
 
   try {
-    const user = await prisma.user.findFirst({
-      where: {
-        id,
-      },
-    });
+    const user = await userModel.findUserById(id);
 
     if (!user) {
       return res
@@ -121,11 +90,7 @@ export const deleteUser = async (req, res) => {
         .json({ error: 'Usuário não encontrado' });
     }
 
-    await prisma.user.delete({
-      where: {
-        id: user.id,
-      },
-    });
+    await userModel.deleteUser(user);
 
     return res
       .status(StatusCodes.OK)
@@ -154,11 +119,7 @@ export const updateUser = async (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: 'ID Inválido' });
     }
 
-    const findUser = await prisma.user.findFirst({
-      where: {
-        id,
-      },
-    });
+    const findUser = await userModel.findUserById(id);
 
     if (!findUser) {
       return res
@@ -167,11 +128,7 @@ export const updateUser = async (req, res) => {
     }
 
     if (email && email !== findUser.email) {
-      const emailExists = await prisma.user.findFirst({
-        where: {
-          email,
-        },
-      });
+      const emailExists = await userModel.findUserByEmail(email);
 
       if (emailExists) {
         return res
@@ -185,23 +142,13 @@ export const updateUser = async (req, res) => {
       hashedPassword = await bcrypt.hash(password, 10);
     }
 
-    const updatedUser = await prisma.user.update({
-      where: {
-        id: findUser.id,
-      },
-      data: {
-        name,
-        email,
-        passwordHash: password ? hashedPassword : findUser.passwordHash,
-        updatedAt: new Date(),
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        updatedAt: true,
-      },
-    });
+    const updatedUser = await userModel.updateUser(
+      findUser,
+      name,
+      email,
+      password,
+      hashedPassword,
+    );
 
     return res.json(updatedUser);
   } catch (error) {
