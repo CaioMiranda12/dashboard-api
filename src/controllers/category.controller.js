@@ -91,6 +91,18 @@ export const deleteCategory = async (req, res) => {
         .json({ message: 'Categoria não encontrada' });
     }
 
+    const transactionsWithCategory = await prisma.transaction.findFirst({
+      where: {
+        categoryId: Number(id),
+      },
+    });
+
+    if (transactionsWithCategory) {
+      return res
+        .status(400)
+        .json({ error: 'Categoria em uso por transações.' });
+    }
+
     await prisma.category.delete({
       where: {
         id: category.id,
