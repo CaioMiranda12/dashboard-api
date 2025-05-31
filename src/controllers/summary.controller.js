@@ -1,5 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
-import prisma from '../prisma/client';
+import * as TransactionModel from '../models/transactionModel';
 
 export const getMonthlySummary = async (req, res) => {
   try {
@@ -23,9 +23,8 @@ export const getMonthlySummary = async (req, res) => {
       ...(startDate || endDate ? { date: dateFilter } : {}),
     };
 
-    const transactions = await prisma.transaction.findMany({
-      where: whereFilter,
-    });
+    const transactions =
+      await TransactionModel.findUserTransactionsByDate(whereFilter);
 
     const income = transactions
       .filter((t) => t.type === 'income')
@@ -39,7 +38,6 @@ export const getMonthlySummary = async (req, res) => {
 
     return res.status(StatusCodes.OK).json({ income, expense, balance });
   } catch (error) {
-    console.error('Erro no resumo por data:', error);
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: 'Erro ao gerar o resumo por data' });
@@ -51,21 +49,10 @@ export const getYearSummary = async (req, res) => {
     const { userId } = req;
     const year = Number(req.query.year) || new Date().getFullYear();
 
-    const now = new Date(year, 0);
-
-    const firstDay = new Date(now.getFullYear(), 0, 1);
-
-    const lastDay = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
-
-    const transactions = await prisma.transaction.findMany({
-      where: {
-        userId,
-        date: {
-          gte: firstDay,
-          lte: lastDay,
-        },
-      },
-    });
+    const transactions = await TransactionModel.findUserTransactionsByYear(
+      userId,
+      year,
+    );
 
     const summaryByMonth = transactions.reduce((acc, transaction) => {
       const date = new Date(transaction.date);
@@ -93,7 +80,6 @@ export const getYearSummary = async (req, res) => {
 
     return res.json(summaryByMonth);
   } catch (error) {
-    console.error('Erro no resumo por ano:', error);
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: 'Erro ao gerar o resumo por ano' });

@@ -93,3 +93,26 @@ export const updateTransaction = (transaction, validatedData, inputDate) =>
       },
     },
   });
+
+export const findUserTransactionsByDate = (whereFilter) =>
+  prisma.transaction.findMany({
+    where: whereFilter,
+  });
+
+export const findUserTransactionsByYear = (userId, year) => {
+  const now = new Date(year, 0);
+
+  const firstDay = new Date(now.getFullYear(), 0, 1);
+
+  const lastDay = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+
+  prisma.transaction.findMany({
+    where: {
+      userId,
+      date: {
+        gte: firstDay,
+        lte: lastDay,
+      },
+    },
+  });
+};
