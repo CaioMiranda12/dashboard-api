@@ -1,28 +1,13 @@
 import { StatusCodes } from 'http-status-codes';
 import * as yup from 'yup';
-import prisma from '../prisma/client';
+import * as TransactionModel from '../models/transactionModel';
+import * as CategoryModel from '../models/categoryModel';
 
 export const getUserTransactions = async (req, res) => {
   try {
     const { userId } = req;
 
-    const transactions = await prisma.transaction.findMany({
-      where: {
-        userId,
-      },
-      include: {
-        Category: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
-          },
-        },
-      },
-      orderBy: {
-        date: 'desc',
-      },
-    });
+    const transactions = await TransactionModel.findUserTransactions(userId);
 
     return res.status(StatusCodes.OK).json(transactions);
   } catch (error) {
@@ -37,21 +22,10 @@ export const getOneTransaction = async (req, res) => {
     const { id } = req.params;
     const { userId } = req;
 
-    const transaction = await prisma.transaction.findFirst({
-      where: {
-        id: Number(id),
-        userId,
-      },
-      include: {
-        Category: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
-          },
-        },
-      },
-    });
+    const transaction = await TransactionModel.getUserTransactionById(
+      userId,
+      id,
+    );
 
     return res.status(StatusCodes.OK).json(transaction);
   } catch (error) {
@@ -77,12 +51,17 @@ export const createTransaction = async (req, res) => {
     const { title, description, amount, categoryId, type, date } = req.body;
     const { userId } = req;
 
-    const categoryExists = await prisma.category.findFirst({
-      where: {
-        userId,
-        id: categoryId,
-      },
-    });
+    // const categoryExists = await prisma.category.findFirst({
+    //   where: {
+    //     userId,
+    //     id: categoryId,
+    //   },
+    // });
+
+    const categoryExists = CategoryModel.getUserCategoryById(
+      userId,
+      categoryId,
+    );
 
     if (!categoryExists) {
       return res
@@ -90,26 +69,15 @@ export const createTransaction = async (req, res) => {
         .json({ error: 'Categoria não encontrada' });
     }
 
-    const transaction = await prisma.transaction.create({
-      data: {
-        title,
-        description,
-        amount,
-        categoryId,
-        type,
-        userId,
-        date: date ? new Date(date) : new Date(),
-      },
-      include: {
-        Category: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
-          },
-        },
-      },
-    });
+    const transaction = await TransactionModel.createTransaction(
+      title,
+      description,
+      amount,
+      categoryId,
+      type,
+      userId,
+      date,
+    );
 
     return res.status(StatusCodes.CREATED).json(transaction);
   } catch (error) {
@@ -124,11 +92,10 @@ export const deleteTransaction = async (req, res) => {
     const { id } = req.params;
     const { userId } = req;
 
-    const transaction = await prisma.transaction.findFirst({
-      where: {
-        id: Number(id),
-      },
-    });
+    const transaction = await TransactionModel.getUserTransactionById(
+      userId,
+      id,
+    );
 
     if (!transaction) {
       return res
@@ -136,17 +103,7 @@ export const deleteTransaction = async (req, res) => {
         .json({ error: 'Transação não encontrada' });
     }
 
-    if (transaction.userId !== userId) {
-      return res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json({ error: 'Acesso negado' });
-    }
-
-    await prisma.transaction.delete({
-      where: {
-        id: transaction.id,
-      },
-    });
+    await TransactionModel.deleteTransaction(transaction);
 
     return res
       .status(StatusCodes.OK)
@@ -183,11 +140,10 @@ export const updateTransaction = async (req, res) => {
     const { id } = req.params;
     const { userId } = req;
 
-    const transaction = await prisma.transaction.findFirst({
-      where: {
-        id: Number(id),
-      },
-    });
+    const transaction = await TransactionModel.getUserTransactionById(
+      userId,
+      id,
+    );
 
     if (!transaction) {
       return res
@@ -195,19 +151,11 @@ export const updateTransaction = async (req, res) => {
         .json({ error: 'Transação não encontrada' });
     }
 
-    if (transaction.userId !== userId) {
-      return res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json({ error: 'Acesso negado' });
-    }
-
     if (validatedData.categoryId) {
-      const categoryExists = await prisma.category.findFirst({
-        where: {
-          userId,
-          id: validatedData.categoryId,
-        },
-      });
+      const categoryExists = await TransactionModel.getUserTransactionById(
+        userId,
+        validatedData.categoryId,
+      );
 
       if (!categoryExists) {
         return res
@@ -218,25 +166,11 @@ export const updateTransaction = async (req, res) => {
 
     const inputDate = new Date(`${req.body.date}T00:00:00Z`);
 
-    const updatedTransaction = await prisma.transaction.update({
-      where: {
-        id: transaction.id,
-      },
-      data: {
-        ...validatedData,
-        date: inputDate,
-        updatedAt: new Date(),
-      },
-      include: {
-        Category: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
-          },
-        },
-      },
-    });
+    const updatedTransaction = await TransactionModel.updateTransaction(
+      transaction,
+      validatedData,
+      inputDate,
+    );
 
     return res.status(StatusCodes.OK).json(updatedTransaction);
   } catch (error) {
