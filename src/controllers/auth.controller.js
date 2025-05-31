@@ -2,8 +2,8 @@ import { StatusCodes } from 'http-status-codes';
 import * as yup from 'yup';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import prisma from '../prisma/client';
 import authConfig from '../configs/auth';
+import * as UserModel from '../models/userModel';
 
 export const loginUser = async (req, res) => {
   const scheme = yup.object({
@@ -25,11 +25,7 @@ export const loginUser = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const user = await prisma.user.findFirst({
-      where: {
-        email,
-      },
-    });
+    const user = await UserModel.findUserByEmail(email);
 
     if (!user) {
       return emailOrPasswordIncorrect();
