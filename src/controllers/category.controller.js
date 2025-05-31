@@ -1,19 +1,12 @@
 import { StatusCodes } from 'http-status-codes';
 import * as yup from 'yup';
-import prisma from '../prisma/client';
+import * as CategoryModel from '../models/categoryModel';
 
 export const getAllUserCategories = async (req, res) => {
   try {
     const { userId } = req;
 
-    const categories = await prisma.category.findMany({
-      where: {
-        userId,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const categories = await CategoryModel.findUserCategoriesById(userId);
 
     return res.status(StatusCodes.OK).json(categories);
   } catch (error) {
@@ -41,15 +34,10 @@ export const createCategory = async (req, res) => {
 
     schema.validateSync(req.body, { abortEarly: false });
 
-    const categoryExists = await prisma.category.findFirst({
-      where: {
-        userId,
-        name: {
-          equals: name,
-          mode: 'insensitive',
-        },
-      },
-    });
+    const categoryExists = await CategoryModel.findUserCategoriesByName(
+      userId,
+      name,
+    );
 
     if (categoryExists) {
       return res
@@ -57,13 +45,11 @@ export const createCategory = async (req, res) => {
         .json({ error: 'Já existe uma categoria com esse nome' });
     }
 
-    const category = await prisma.category.create({
-      data: {
-        name,
-        color,
-        userId,
-      },
-    });
+    const category = await CategoryModel.createUserCategory(
+      name,
+      color,
+      userId,
+    );
 
     return res.status(StatusCodes.CREATED).json(category);
   } catch (error) {
@@ -78,12 +64,7 @@ export const deleteCategory = async (req, res) => {
     const { userId } = req;
     const { id } = req.params;
 
-    const category = await prisma.category.findFirst({
-      where: {
-        userId,
-        id: Number(id),
-      },
-    });
+    const category = await CategoryModel.getUserCategoryById(userId, id);
 
     if (!category) {
       return res
@@ -91,11 +72,8 @@ export const deleteCategory = async (req, res) => {
         .json({ message: 'Categoria não encontrada' });
     }
 
-    const transactionsWithCategory = await prisma.transaction.findFirst({
-      where: {
-        categoryId: Number(id),
-      },
-    });
+    const transactionsWithCategory =
+      await CategoryModel.findTransactionsWithCategoryId(id);
 
     if (transactionsWithCategory) {
       return res
@@ -103,11 +81,7 @@ export const deleteCategory = async (req, res) => {
         .json({ error: 'Categoria em uso por transações.' });
     }
 
-    await prisma.category.delete({
-      where: {
-        id: category.id,
-      },
-    });
+    await CategoryModel.deleteCategory(userId, category);
 
     return res
       .status(StatusCodes.OK)
@@ -137,12 +111,7 @@ export const updateCategory = async (req, res) => {
 
     scheme.validateSync(req.body, { abortEarly: false });
 
-    const category = await prisma.category.findFirst({
-      where: {
-        userId,
-        id: Number(id),
-      },
-    });
+    const category = await CategoryModel.getUserCategoryById(userId, id);
 
     if (!category) {
       return res
@@ -150,12 +119,7 @@ export const updateCategory = async (req, res) => {
         .json({ error: 'Categoria não encontrada' });
     }
 
-    const nameExists = await prisma.category.findFirst({
-      where: {
-        userId,
-        name,
-      },
-    });
+    const nameExists = await CategoryModel.getUserCategoryByName(userId, name);
 
     if (nameExists && category.name !== name) {
       return res
@@ -163,16 +127,11 @@ export const updateCategory = async (req, res) => {
         .json({ error: 'Já existe uma categoria com esse nome' });
     }
 
-    const updatedCategory = await prisma.category.update({
-      where: {
-        id: category.id,
-      },
-      data: {
-        name,
-        color,
-        updatedAt: new Date(),
-      },
-    });
+    const updatedCategory = await CategoryModel.updateCategory(
+      category,
+      name,
+      color,
+    );
 
     return res.status(StatusCodes.OK).json(updatedCategory);
   } catch (error) {
