@@ -51,13 +51,6 @@ export const createTransaction = async (req, res) => {
     const { title, description, amount, categoryId, type, date } = req.body;
     const { userId } = req;
 
-    // const categoryExists = await prisma.category.findFirst({
-    //   where: {
-    //     userId,
-    //     id: categoryId,
-    //   },
-    // });
-
     const categoryExists = CategoryModel.getUserCategoryById(
       userId,
       categoryId,
@@ -79,8 +72,11 @@ export const createTransaction = async (req, res) => {
       date,
     );
 
+    console.log(transaction.date);
+
     return res.status(StatusCodes.CREATED).json(transaction);
   } catch (error) {
+    console.log(error);
     return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ error: error.errors || 'Erro inesperado' });
@@ -164,7 +160,9 @@ export const updateTransaction = async (req, res) => {
       }
     }
 
-    const inputDate = new Date(`${req.body.date}T00:00:00Z`);
+    const inputDate = req.body.date
+      ? new Date(`${req.body.date}T00:00:00Z`)
+      : transaction.date;
 
     const updatedTransaction = await TransactionModel.updateTransaction(
       transaction,
