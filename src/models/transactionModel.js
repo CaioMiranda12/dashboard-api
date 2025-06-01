@@ -106,7 +106,7 @@ export const findUserTransactionsByYear = (userId, year) => {
 
   const lastDay = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
 
-  prisma.transaction.findMany({
+  return prisma.transaction.findMany({
     where: {
       userId,
       date: {
