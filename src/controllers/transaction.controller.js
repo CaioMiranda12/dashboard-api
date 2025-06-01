@@ -72,8 +72,6 @@ export const createTransaction = async (req, res) => {
       date,
     );
 
-    console.log(transaction.date);
-
     return res.status(StatusCodes.CREATED).json(transaction);
   } catch (error) {
     console.log(error);

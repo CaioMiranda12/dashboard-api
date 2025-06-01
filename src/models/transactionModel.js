@@ -44,8 +44,17 @@ export const createTransaction = (
   type,
   userId,
   date,
-) =>
-  prisma.transaction.create({
+) => {
+  function getLocalDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+  return prisma.transaction.create({
     data: {
       title,
       description,
@@ -53,7 +62,7 @@ export const createTransaction = (
       categoryId,
       type,
       userId,
-      date: date ? new Date(date) : new Date(),
+      date: date ? new Date(date) : new Date(getLocalDateString()),
     },
     include: {
       Category: {
@@ -65,6 +74,7 @@ export const createTransaction = (
       },
     },
   });
+};
 
 export const deleteTransaction = (transaction) =>
   prisma.transaction.delete({
