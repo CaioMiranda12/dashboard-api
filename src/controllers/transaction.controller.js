@@ -146,7 +146,7 @@ export const updateTransaction = async (req, res) => {
     }
 
     if (validatedData.categoryId) {
-      const categoryExists = await TransactionModel.getUserTransactionById(
+      const categoryExists = await CategoryModel.getUserCategoryById(
         userId,
         validatedData.categoryId,
       );
