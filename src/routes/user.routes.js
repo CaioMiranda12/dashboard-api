@@ -13,8 +13,8 @@ const routes = new Router();
 routes.get('/', findAllUsers);
 routes.get('/:id', findOneUser);
 routes.post('/', createUser);
-routes.delete('/:id', authMiddleware, deleteUser);
-routes.patch('/:id', authMiddleware, updateUser);
+routes.delete('/', authMiddleware, deleteUser);
+routes.patch('/', authMiddleware, updateUser);
 
 /**
  * @swagger

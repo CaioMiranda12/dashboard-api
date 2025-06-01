@@ -75,14 +75,14 @@ export const createUser = async (req, res) => {
 };
 
 export const deleteUser = async (req, res) => {
-  const { id } = req.params;
+  const { userId } = req;
 
-  if (!isUuid(id)) {
+  if (!isUuid(userId)) {
     return res.status(StatusCodes.BAD_REQUEST).json({ error: 'ID Inválido' });
   }
 
   try {
-    const user = await userModel.findUserById(id);
+    const user = await userModel.findUserById(userId);
 
     if (!user) {
       return res
@@ -112,14 +112,14 @@ export const updateUser = async (req, res) => {
   try {
     scheme.validateSync(req.body, { abortEarly: false });
 
-    const { id } = req.params;
+    const { userId } = req;
     const { name, email, password } = req.body;
 
-    if (!isUuid(id)) {
+    if (!isUuid(userId)) {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: 'ID Inválido' });
     }
 
-    const findUser = await userModel.findUserById(id);
+    const findUser = await userModel.findUserById(userId);
 
     if (!findUser) {
       return res
