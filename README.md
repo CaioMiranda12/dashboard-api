@@ -71,7 +71,8 @@ DELETE  /category/:id      # Deletar categoria (requer token)
 
 # ℹ️ SUMMARY
 
-GET     /summary?month=X&year=Y           # Mostra o resumo das receitas, despesas e saldo do usuário por mês/ano (requer token)
+GET     /summary?startDate=X&endDate=Y       # Mostra o resumo das receitas, despesas e saldo do usuário por DATA (requer token)
+GET     /summary/year      # Mostra o resumo das receitas, despesas e saldo do usuário por ANO (requer token)
 ```
 
 
